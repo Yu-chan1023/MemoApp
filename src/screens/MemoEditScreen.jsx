@@ -1,5 +1,5 @@
 import React from 'react';
-import { 
+import {
   View, TextInput, StyleSheet,
 } from 'react-native';
 
@@ -14,7 +14,7 @@ export default function MemoEditScreen() {
       <View style={styles.inputContainer}>
         <TextInput value="買い物リスト" multiline style={styles.input} />
       </View>
-      <CircleButton name="check" />
+      <CircleButton name="check"/>
     </KeyboardSafeView>
   );
 }
