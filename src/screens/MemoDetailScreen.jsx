@@ -1,23 +1,49 @@
-import React from 'react';
+import { shape, string } from 'prop-types';
+import React, { useEffect, useState } from 'react';
 import {
   View, ScrollView, Text, StyleSheet,
 } from 'react-native';
 
+import firebase from 'firebase';
+
 import CircleButton from '../components/CircleButton';
 
+import { dateToString } from '../utils';
+
 export default function MemoDetailScreen(props) {
-  const { navigation } = props;
+  const [memo, setMemo] = useState(null);
+  const { navigation, route } = props;
+  const { id } = route.params;
+
+  useEffect(() => {
+    const { currentUser } = firebase.auth();
+    let unsubscribe = () => {};
+    if ( currentUser ) {
+      const db = firebase.firestore();
+      const ref = db.collection(`users/${currentUser.uid}/memos`).doc(id);
+      unsubscribe = ref.onSnapshot((doc) => {
+        const data = doc.data();
+        setMemo({
+          id: doc.id,
+          bodyText: data.bodyText,
+          updatedAt: data.updatedAt.toDate(),
+        })
+      }, (e) => {
+        Alert.alert('読み込み失敗');
+      });
+    }
+    return unsubscribe;
+  }, []);
+
   return (
     <View style={styles.container}>
       <View style={styles.memoHeader}>
-        <Text style={styles.memoTitle}>買い物リスト</Text>
-        <Text style={styles.memoDate}>2020年12月24日 10:00</Text>
+        <Text style={styles.memoTitle} numberOfLines={1}>{memo && memo.bodyText}</Text>
+        <Text style={styles.memoDate}>{memo && dateToString(memo.updatedAt)}</Text>
       </View>
       <ScrollView style={styles.memoBody}>
         <Text style={styles.memoText}>
-          買い物リスト
-          書体やレイアウトなどを確認するために用います。
-          本文ようなので使い方を間違えると不自然に見えることもありますので要注意。
+          {memo && memo.bodyText}
         </Text>
       </ScrollView>
       <CircleButton
@@ -28,6 +54,12 @@ export default function MemoDetailScreen(props) {
     </View>
   );
 }
+
+MemoDetailScreen.propTypes = {
+  route: shape({
+    params: shape({ id: string }),
+  }).isRequired,
+};
 
 const styles = StyleSheet.create({
   container: {
