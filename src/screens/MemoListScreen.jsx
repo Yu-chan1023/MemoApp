@@ -5,10 +5,12 @@ import firebase from 'firebase';
 import CircleButton from '../components/CircleButton';
 import MemoList from '../components/MemoList';
 import LogOutButton from '../components/LogOutButton';
+import Loading from '../components/Loading';
 
 export default function MemoListScreen(props) {
   const { navigation } = props;
   const [memos, setMemos] = useState([]);
+  const [isLoading, setLoading] = useState(false);
   useEffect(() => {
     navigation.setOptions({
       headerRight: () => <LogOutButton />,
@@ -20,6 +22,7 @@ export default function MemoListScreen(props) {
     const { currentUser } = firebase.auth();
     let unsubscribe = () => {};
     if (currentUser) {
+      setLoading(true);
       const ref = db.collection(`users/${currentUser.uid}/memos`).orderBy('updatedAt', 'desc');
       unsubscribe = ref.onSnapshot((snapshot) => {
         const userMemos = [];
@@ -32,7 +35,9 @@ export default function MemoListScreen(props) {
           })
         });
         setMemos(userMemos);
+        setLoading(false);
       }, (e) => {
+        setLoading(false);
         Alert.alert('読み込み失敗');
       });
     }
@@ -41,6 +46,7 @@ export default function MemoListScreen(props) {
 
   return (
     <View style={styles.container}>
+      <Loading isLoading={isLoading} />
       <MemoList memos={memos} />
       <CircleButton
         name="plus"
